@@ -1,0 +1,171 @@
+openapi: 3.0.3
+info:
+    title: Arquetipo API REST
+    version: 1.0.0
+    description: API de ejemplo. Los usuarios se guardan en memoria y se pierden al reiniciar.
+servers:
+    - url: http://localhost:3000
+paths:
+    /:
+        get:
+            summary: Ruta original de ejemplo
+            responses:
+                "200":
+                    description: Saludo en texto plano
+                    content:
+                        text/html:
+                            schema:
+                                type: string
+                                example: Hello World!
+    /health:
+        get:
+            summary: Estado del proceso
+            responses:
+                "200":
+                    description: Proceso disponible
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: ok
+    /api/v1/users:
+        get:
+            summary: Listar usuarios
+            responses:
+                "200":
+                    description: Lista de usuarios
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/User"
+        post:
+            summary: Crear un usuario
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserInput"
+            responses:
+                "201":
+                    description: Usuario creado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "409":
+                    $ref: "#/components/responses/Conflict"
+    /api/v1/users/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+                  format: uuid
+        get:
+            summary: Obtener un usuario
+            responses:
+                "200":
+                    description: Usuario encontrado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserResponse"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        put:
+            summary: Reemplazar un usuario
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserInput"
+            responses:
+                "200":
+                    description: Usuario actualizado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+                "409":
+                    $ref: "#/components/responses/Conflict"
+        delete:
+            summary: Borrar un usuario
+            responses:
+                "204":
+                    description: Usuario borrado
+                "404":
+                    $ref: "#/components/responses/NotFound"
+components:
+    schemas:
+        UserInput:
+            type: object
+            required: [name, email]
+            properties:
+                name:
+                    type: string
+                    minLength: 1
+                    maxLength: 100
+                email:
+                    type: string
+                    format: email
+                    maxLength: 254
+        User:
+            allOf:
+                - $ref: "#/components/schemas/UserInput"
+                - type: object
+                  required: [id]
+                  properties:
+                      id:
+                          type: string
+                          format: uuid
+        UserResponse:
+            type: object
+            properties:
+                data:
+                    $ref: "#/components/schemas/User"
+        ApiError:
+            type: object
+            properties:
+                error:
+                    type: object
+                    properties:
+                        code:
+                            type: string
+                        message:
+                            type: string
+    responses:
+        BadRequest:
+            description: Entrada inválida
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/ApiError"
+        NotFound:
+            description: Recurso no encontrado
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/ApiError"
+        Conflict:
+            description: Correo ya registrado
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/ApiError"
